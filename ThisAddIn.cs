@@ -7,6 +7,8 @@ using Outlook = Microsoft.Office.Interop.Outlook;
 using Office = Microsoft.Office.Core;
 using System.Windows.Forms;
 using System.Drawing;
+using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace OutlookAddIn2
 {
@@ -17,6 +19,27 @@ namespace OutlookAddIn2
             this.Application.Inspectors.NewInspector += Inspectors_NewInspector;
         }
 
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern IntPtr FindWindowEx(IntPtr parentHandle, IntPtr childAfter, string className, string windowTitle);
+
+        [DllImport("user32.dll")]
+        static extern bool SetFocus(IntPtr hWnd);
+
+        public void SetFocusToField(String windowTitle)
+        {
+            // Find the window
+            IntPtr outlookWindow = FindWindow(null, windowTitle);
+            Debug.Write(outlookWindow);
+            // Find the child window
+            IntPtr toField = FindWindowEx(outlookWindow, IntPtr.Zero, null, "To");
+
+            // Set focus
+            SetFocus(toField);
+        }
+
 
         private void Inspectors_NewInspector(Outlook.Inspector Inspector)
         {
@@ -24,7 +47,8 @@ namespace OutlookAddIn2
             {
                 Outlook.MailItem mailItem = Inspector.CurrentItem as Outlook.MailItem;
 
-                
+
+
 
                 // show a dialog box to select string
                 using (Form form = new Form())
@@ -53,6 +77,39 @@ namespace OutlookAddIn2
                             LinkColor = Color.Black  // This will change the color of the link to black
                         };
 
+                        linkLabel.DoubleClick += (sender, e) =>
+                        {
+                            string selectedString = null;
+
+                            if (selectedPanel != null)
+                            {
+                                selectedString = selectedPanel.Controls.OfType<LinkLabel>().First()?.Text;
+                            }
+
+                            if (selectedString != null)
+                            {
+                                // Use a timer to wait for the signature to be loaded
+                                System.Timers.Timer timer = new System.Timers.Timer(500);
+                                timer.Elapsed += (s, elapsedArgs) =>
+                                {
+                                    timer.Stop();
+
+                                    //string selectedHtmlString = "<p>" + selectedString + "</p>";
+                                    string selectedHtmlString = "<b><font color='red' size='6'>" + selectedString + "</font></b>";  // HTML formatted string
+                                    string existingBody = mailItem.HTMLBody;
+                                    mailItem.HTMLBody = selectedHtmlString + "<br>" + existingBody; // Add before
+
+                                    // Display the MailItem
+                                    //mailItem.Display(false);  // This should put the focus in the "To" field by default
+                                    
+                                };
+
+                                timer.Start();
+                            }
+
+                            form.Close();
+                        };
+
                         Panel panel = new Panel()
                         {
                             Location = new Point(10, currentY),
@@ -60,6 +117,40 @@ namespace OutlookAddIn2
                             BorderStyle = BorderStyle.FixedSingle,
                             BackColor = Color.White
                         };
+
+                        panel.DoubleClick += (sender, e) =>
+                        {
+                            string selectedString = null;
+
+                            if (selectedPanel != null)
+                            {
+                                selectedString = selectedPanel.Controls.OfType<LinkLabel>().First()?.Text;
+                            }
+
+                            if (selectedString != null)
+                            {
+                                // Use a timer to wait for the signature to be loaded
+                                System.Timers.Timer timer = new System.Timers.Timer(500);
+                                timer.Elapsed += (s, elapsedArgs) =>
+                                {
+                                    timer.Stop();
+
+                                    //string selectedHtmlString = "<p>" + selectedString + "</p>";
+                                    string selectedHtmlString = "<b><font color='red' size='6'>" + selectedString + "</font></b>";  // HTML formatted string
+                                    string existingBody = mailItem.HTMLBody;
+                                    mailItem.HTMLBody = selectedHtmlString + "<br>" + existingBody; // Add before
+
+                                    // Display the MailItem
+                                    //mailItem.Display(false);  // This should put the focus in the "To" field by default
+
+                                };
+
+                                timer.Start();
+                            }
+
+                            form.Close();
+                        };
+
                         panel.Controls.Add(linkLabel);
                         panels[i] = panel;
                         form.Controls.Add(panel);
@@ -120,18 +211,12 @@ namespace OutlookAddIn2
 
                                 mailItem.HTMLBody = selectedHtmlString + "<br>" + existingBody; // Add before
 
-                                // mailItem.To = ""; // Clear the To field
-                                // var editor = mailItem.GetInspector.WordEditor;
                                 //mailItem.To = "";
+                                //mailItem.Display(false);
                                 //mailItem.GetInspector.Activate();
-                                //mailItem.GetInspector.WordEditor.Range(1, 0).Select();
-
-                                //mailItem.GetInspector.WordEditor.Range(mailItem.GetInspector.WordEditor.Content. - 1, mailItem.GetInspector.WordEditor.Content.End - 1).Select();
-                                mailItem.GetInspector.WordEditor.Range(1, 0).Select();
+                                //mailItem.GetInspector.WordEditor.Application.ActiveWindow.Selection.MoveRight(1);
 
 
-                                // Display the MailItem
-                                mailItem.Display(false);  // This should put the focus in the "To" field by default
                             };
                             timer.Start(); // Start the timer
 
