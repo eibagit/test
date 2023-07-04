@@ -7,8 +7,7 @@ using Outlook = Microsoft.Office.Interop.Outlook;
 using Office = Microsoft.Office.Core;
 using System.Windows.Forms;
 using System.Drawing;
-using System.Runtime.InteropServices;
-using System.Diagnostics;
+
 
 namespace OutlookAddIn2
 {
@@ -18,28 +17,6 @@ namespace OutlookAddIn2
         {
             this.Application.Inspectors.NewInspector += Inspectors_NewInspector;
         }
-
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern IntPtr FindWindowEx(IntPtr parentHandle, IntPtr childAfter, string className, string windowTitle);
-
-        [DllImport("user32.dll")]
-        static extern bool SetFocus(IntPtr hWnd);
-
-        public void SetFocusToField(String windowTitle)
-        {
-            // Find the window
-            IntPtr outlookWindow = FindWindow(null, windowTitle);
-            Debug.Write(outlookWindow);
-            // Find the child window
-            IntPtr toField = FindWindowEx(outlookWindow, IntPtr.Zero, null, "To");
-
-            // Set focus
-            SetFocus(toField);
-        }
-
 
         private void Inspectors_NewInspector(Outlook.Inspector Inspector)
         {
@@ -101,7 +78,7 @@ namespace OutlookAddIn2
 
                                     // Display the MailItem
                                     //mailItem.Display(false);  // This should put the focus in the "To" field by default
-                                    
+
                                 };
 
                                 timer.Start();
@@ -232,16 +209,10 @@ namespace OutlookAddIn2
 
 
         #region VSTO generated code
-
-        /// <summary>
-        /// Required method for Designer support - do not modify
-        /// the contents of this method with the code editor.
-        /// </summary>
         private void InternalStartup()
         {
             this.Startup += new System.EventHandler(ThisAddIn_Startup);
         }
-        
         #endregion
     }
 }
