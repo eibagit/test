@@ -46,7 +46,22 @@ namespace OutlookAddIn2
 
                     // Read the lines from a text file
                     // Each line should contain an option and a color, separated by a comma
-                    string[] lines = System.IO.File.ReadAllLines(@"C:\temp\list.txt"); // Replace with the path to your file
+                    string[] lines = null;
+                    string filePath = @"H:\list.txt"; // Replace with the path to your file
+                    if (!System.IO.File.Exists(filePath))
+                    {
+                        filePath = @"C:\temp\list.txt"; // Use this file if the first one does not exist
+                    }
+
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        lines = System.IO.File.ReadAllLines(filePath);
+                        // rest of your code...
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("File not found: " + filePath);
+                    }
                     int currentY = 10;
                     Panel[] panels = new Panel[lines.Length];
                     Panel selectedPanel = null; // This will keep track of the selected panel
